@@ -1,16 +1,110 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+# 📱 Compose Multiplatform CRUD App
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+This repository contains a **Compose Multiplatform (Android + iOS)** app that demonstrates:
 
+- 🗄️ **SQLDelight** → Local DB CRUD operations  
+- 🧭 **JetBrains Navigation Compose** → Navigation across screens  
+- 📑 **PDF Viewing**  
+  - Android → [Bouquet](https://github.com/GRizzi91/bouquet) (Compose PDF library)  
+  - iOS → Native **PDFKit** using `expect/actual`  
+- ⚡ **Koin** → Dependency Injection  
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+---
+
+## 🚀 Tech Stack
+- [Compose Multiplatform](https://www.jetbrains.com/lp/compose-multiplatform/)  
+- [SQLDelight](https://cashapp.github.io/sqldelight/)  
+- [Koin](https://insert-koin.io/)  
+- [JetBrains Navigation Compose](https://github.com/JetBrains/compose-multiplatform-core/tree/master/navigation)  
+- [Bouquet PDF](https://github.com/GRizzi91/bouquet)  
+
+---
+
+## 📂 Project Structure
+```
+
+shared/      → Common code (DB, DI, Nav, UI, PDF expect/actual)
+androidApp/  → Android app (Bouquet PDF, SQLDelight driver)
+iosApp/      → iOS app (UIKit PDFKit, SQLDelight driver)
+
+````
+
+---
+
+## 🗄️ Database Example (SQLDelight)
+```sql
+CREATE TABLE Notes (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  content TEXT
+);
+````
+
+```kotlin
+class NotesRepository(private val db: NotesQueries) {
+    fun getAll() = db.selectAll().asFlow().mapToList()
+    fun insert(title: String, content: String) = db.insertNote(title, content)
+    fun delete(id: Long) = db.deleteNote(id)
+}
+```
+
+---
+
+## 🧭 Navigation Example
+
+```kotlin
+NavHost(navController, startDestination = "home") {
+    composable("home") { HomeScreen(navController) }
+    composable("add") { AddNoteScreen(navController) }
+    composable("pdf") { PdfScreen(navController) }
+}
+```
+
+---
+
+## 📑 PDF Viewer (expect/actual)
+
+**Shared**
+
+```kotlin
+expect class PdfViewer {
+    @Composable fun Render(path: String)
+}
+```
+
+**Android (Bouquet)**
+
+```kotlin
+actual class PdfViewer {
+    @Composable actual fun Render(path: String) {
+        BouquetPdfView(filePath = path, modifier = Modifier.fillMaxSize())
+    }
+}
+```
+
+**iOS (UIKit PDFKit)**
+
+```kotlin
+actual class PdfViewer {
+    @Composable actual fun Render(path: String) {
+        UIKitPdfView(path) // PDFKit-backed UIView
+    }
+}
+```
+
+## 🛠 Dependency Injection (Koin)
+
+```kotlin
+val appModule = module {
+    single { NotesRepository(get()) }
+    single { createDatabase(get()) }
+}
+fun initKoin() = startKoin { modules(appModule) }
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**.
