@@ -103,7 +103,16 @@ val appModule = module {
 fun initKoin() = startKoin { modules(appModule) }
 ```
 
----
+## 🛠 Android Images
+<p>
+<img width="270" height="600" alt="No-Notes-Android" src="https://github.com/user-attachments/assets/7e368576-89c3-41e4-82e5-b4fdf1cd1844" />
+<img width="270" height="600" alt="NoteList-Android" src="https://github.com/user-attachments/assets/58a0d548-cf32-4578-8b01-857aab560221" />
+<img width="270" height="600" alt="PDFViewer-Android" src="https://github.com/user-attachments/assets/bcc36112-2639-4da8-83c0-c8fb5c047f8c" />
+</p>
+<p>
+  <img width="270" height="600" alt="Screenshot_20250828_010124" src="https://github.com/user-attachments/assets/7c6d5280-7118-4f0b-998a-ff5f51b6b881" />
+</p>
+
 
 ## 📄 License
 
