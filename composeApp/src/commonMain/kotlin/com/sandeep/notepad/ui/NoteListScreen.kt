@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,6 +21,7 @@ import com.sandeep.notepad.db.Notepad
 @Composable
 fun NoteListScreen(
     noteList: List<Notepad>,
+    snackbarHostState: SnackbarHostState,
     onNoteClick: (Long) -> Unit,
 ) {
     Column(
@@ -43,7 +45,8 @@ fun NoteListScreen(
                     title = it.title,
                     summary = it.bodyHtml,
                     date = it.createdDate,
-                    onClick = { onNoteClick(it.id) }
+                    onClick = { onNoteClick(it.id) },
+                    snackBarHostState = snackbarHostState
                 )
                 HorizontalDivider()
             }

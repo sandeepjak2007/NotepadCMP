@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
@@ -53,20 +55,21 @@ fun NoteAddEditScreen(
     val showError = remember { mutableStateOf<String?>(null) }
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
-    var selectedDate = datePickerState.selectedDateMillis?.let {
-        millisToLocalDate(it).formatDate()
-    } ?: ""
-
+    var selectedDate by remember {
+        mutableStateOf(
+            datePickerState.selectedDateMillis?.let { millisToLocalDate(it).formatDate() } ?: ""
+        )
+    }
 
     LaunchedEffect(noteId) {
         noteId?.let { viewModel.getNoteById(it) }
     }
     LaunchedEffect(note) {
-        if (note != null) {
-            title = note!!.title
-            body = note!!.bodyHtml
-            selectedDate = note!!.createdDate
-        } else {
+        note?.let {
+            title = it.title
+            body = it.bodyHtml
+            selectedDate = it.createdDate
+        } ?: run {
             title = ""
             body = ""
             selectedDate = ""
@@ -74,15 +77,9 @@ fun NoteAddEditScreen(
     }
 
     LaunchedEffect(statusEvent) {
+        if (statusEvent == null) return@LaunchedEffect
         when (val event = statusEvent) {
-            is NoteEvent.NoteAdded -> {
-                showSuccess.value = true
-                showError.value = null
-                delay(1500)
-                showSuccess.value = false
-                onDone()
-            }
-
+            is NoteEvent.NoteAdded,
             is NoteEvent.NoteUpdated -> {
                 showSuccess.value = true
                 showError.value = null
@@ -110,12 +107,18 @@ fun NoteAddEditScreen(
             CircularProgressIndicator()
         }
     } else {
-        Column(modifier = Modifier.fillMaxSize().padding(18.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(18.dp)
+        ) {
             OutlinedTextField(
                 label = { Text("Title") },
                 value = title,
                 onValueChange = { title = it },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
             )
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
@@ -123,13 +126,10 @@ fun NoteAddEditScreen(
                 value = body,
                 onValueChange = { body = it },
                 minLines = 5,
-                modifier = Modifier
-                    .fillMaxWidth()
+                modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(8.dp))
-            Box(
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     label = { Text("Created Date") },
                     value = selectedDate,
@@ -158,7 +158,7 @@ fun NoteAddEditScreen(
                         ) {
                             DatePicker(
                                 state = datePickerState,
-                                showModeToggle = true
+                                showModeToggle = false
                             )
                         }
                     }
@@ -168,7 +168,7 @@ fun NoteAddEditScreen(
             Spacer(Modifier.height(8.dp))
             Button(
                 onClick = {
-                    if (note != null && note?.id != -1L) {
+                    if (note?.id != null && note?.id != -1L) {
                         viewModel.updateNote(
                             note!!.id,
                             title,
@@ -195,7 +195,6 @@ fun NoteAddEditScreen(
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.fillMaxWidth().align(Alignment.CenterHorizontally)
                 )
-                onDone()
             }
             AnimatedVisibility(visible = showError.value != null) {
                 Text(

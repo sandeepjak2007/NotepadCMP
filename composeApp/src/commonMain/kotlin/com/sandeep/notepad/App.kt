@@ -7,7 +7,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -18,14 +17,20 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -56,7 +61,18 @@ fun App() {
         val navController = rememberNavController()
         val navViewModel = koinViewModel<NotepadViewModel>()
         val currentRoute by navController.currentBackStackEntryAsState()
+        val snackBarHostState = remember { SnackbarHostState() }
         Scaffold(
+            snackbarHost = {
+                SnackbarHost(snackBarHostState) { data ->
+                    Snackbar(
+                        snackbarData = data,
+                        modifier = Modifier.fillMaxWidth().padding(10.dp),
+                        containerColor = barColor,
+                        contentColor = backgroundColor
+                    )
+                }
+            },
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {
@@ -110,7 +126,6 @@ fun App() {
                                         when (screen) {
                                             is NoteList -> Icons.AutoMirrored.Filled.Notes
                                             is PdfView -> Icons.Default.PictureAsPdf
-                                            else -> Icons.Default.Home
                                         }, contentDescription = screen.route
                                     )
                                 },
@@ -119,7 +134,6 @@ fun App() {
                                         text = when (screen) {
                                             is NoteList -> "Notes"
                                             is PdfView -> "PDF Viewer"
-                                            else -> "Home"
                                         }
                                     )
                                 },
@@ -147,7 +161,7 @@ fun App() {
                     NoteList.route
                 ) {
                     val notes by navViewModel.notes.collectAsStateWithLifecycle()
-                    NoteListScreen(notes) { id ->
+                    NoteListScreen(notes, snackBarHostState) { id ->
                         navController.navigate("note_edit?noteId=$id")
                     }
                 }
